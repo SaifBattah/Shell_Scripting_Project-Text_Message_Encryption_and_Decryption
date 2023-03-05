@@ -1,0 +1,45 @@
+#Saif Battah - 1170986
+
+#!/bin/bash
+
+rm plain.txt
+pat="^[01]*[01]$"
+
+read -p "Please input the name of the Cipher text file: " CN
+if [ -f "$CN" ]; then
+	string=$(cat $CN)
+	if [[ ! $string =~ $pat ]]
+	then
+		printf "Error: file contains something wrong\n"
+		exit
+	fi
+	len=`expr length "$string"`
+	res=$((len%8))
+	#echo "len = $len | res = $res"
+	if [[ $res != 0 ]]
+	then
+		echo "Not Divided well, Cant be Decrypted!"
+		exit
+	else
+		key=$( cat $CN | grep -o '........$')
+		original_key=$( printf "${key:4:4}${key:0:4}" )
+		dec_key=$(echo "$((2#$original_key))")
+		echo "key: Decimal = $dec_key | Binary = $original_key"
+		loop_size=$(( (len-8)/8 ))
+		read -p "Please input the name of the Plain text file: " plain_file
+		touch $plain_file
+		touch ss.txt
+		for (( k=0; k<$loop_size; k++ ))
+		do
+			chars=$(echo "${string:k*8:8}")
+			original_chars=$( printf "${chars:4:4}${chars:0:4}" )
+			dec_chars=$(echo "$((2#$original_chars))")
+			xor_res=$(( $dec_chars ^ $dec_key ))
+			echo $xor_res | awk '{ printf("%c",$0); }' >> ss.txt
+		done
+	fi
+	sed 's/~ /\n/g' ss.txt > $plain_file
+	echo "Decryption Proccess Done Successfully!"
+else
+	echo "$CN Doesn't Exist!!!"
+fi

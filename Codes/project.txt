@@ -1,0 +1,27 @@
+#Saif Battah - 1170986
+
+#!/bin/bash
+
+chmod +x encryption.txt
+chmod +x decryption.txt
+
+printf "Please Select one\n-e : Encryption\n-d : Decription\n"
+read x
+
+
+case $x in
+
+  e)
+	./encryption.txt
+    ;;
+
+  d)
+	./decryption.txt
+	rm ss.txt
+    ;;
+
+  *)
+    printf "Wrong Input\nPlease Select e or d only!\n\n=========================\n\n"
+	./project.txt
+    ;;
+esac

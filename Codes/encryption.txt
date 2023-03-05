@@ -1,0 +1,95 @@
+#Saif Battah - 1170986
+
+#!/bin/bash
+#touch results.txt
+touch cipher.txt
+touch sorted.txt
+touch temp.txt
+touch temp_2.txt
+#rm results.txt
+rm sorted.txt
+rm cipher.txt
+rm temp.txt
+rm temp_2.txt
+
+sum=0
+pat="^[a-z A-Z]*[a-z A-Z]$"
+D2B=({0..1}{0..1}{0..1}{0..1}{0..1}{0..1}{0..1}{0..1})
+read -p "Please input the name of the Plain text file: " PN
+if [ -f "$PN" ]; then
+	printf "\n"
+	string=$(sed ':a; N; $!ba; s/\n/ ~ /g' plain.txt)
+	echo $string
+	null_str=$(echo $string | sed 's/~/ /g')
+	echo $snull_str
+	if [[ ! $null_str =~ $pat ]] #check that file only contains characters
+	then
+		printf "Error: file contains non-alphabet characters!\n"
+		exit
+	fi
+	len=`expr length "$string"` #gets the length of the sentence to be encrypted
+
+	for (( i=0; i<$len; i++ ))
+	do
+		chhar=$( printf "%d\n" "'${string:i:1}" )
+
+		if [ $chhar -le 90 ] # for characters only in ASCII table
+		then
+			val=$(( $chhar - 64 )) # if Capital letter subtract 64 from asci value to get the needed value
+			#echo $val
+		else
+			val=$(( $chhar - 96 )) # if Small letter subtract 96 from asci value to get the needed value
+			#echo $val
+		fi
+
+		if [ $val != -32 ] # for spaces
+		then
+			sum=$(( $sum + $val )) # sum of word value
+			result=$(( $sum % 256 )) # mode of the sum
+		else
+			#echo "sum= $sum"
+			#echo "result = $result"
+			echo "$result" >> results.txt # append each word value to file
+			sum=0
+		fi
+	done
+
+	sort -n results.txt > sorted.txt # sort the values
+
+	MAX=$(tail -1 sorted.txt) # get the maximum for the key value
+	#echo "Max = $MAX"
+	bin=`echo ${D2B[$MAX]}` # transfere from decimal to binary
+	echo "Key: Decimal = $MAX | Binary = $bin"
+	printf "\n"
+	#----------------------------------------------------------
+	read -p "Please input the name of the Cipher text file: " cipher_file
+	touch $cipher_file
+
+	for (( j=0; j<$len; j++ ))
+	do
+		Ascii=$( printf "%d\n" "'${string:j:1}" ) #get the decimal ascii value of character
+		#echo "Decimal = $Ascii | Binary = $Ascbin"
+		xor_res=$(( $Ascii ^ $MAX )) # xor between character and key
+		xor_bin=`echo ${D2B[$xor_res]}` # transfere result of xor to binary 8 bit
+		#echo "XOR Result = $xor_bin"
+		swapped=$( printf "${xor_bin:4:4}${xor_bin:0:4}\n" ) # swap the first and last 4 bits of character
+		#echo "XOR Result = $xor_bin | Swapped = $swapped"
+		echo "$swapped" >> temp.txt # append result to temp file
+	done
+	printf "\n"
+	#transfere new lines to spaces
+	cat temp.txt | tr "\12" "x" > temp_2.txt # transfere new line to x
+	sed 's/x//g' temp_2.txt > $cipher_file # transfere x to space and append to cipher file
+	#------------------------------------------------------------
+	swapped_key=$( printf "${bin:4:4}${bin:0:4}" ) # swap first and last 4 bits of key
+	#echo "key = $bin | swapped = $swapped_key"
+	printf "$swapped_key" >> $cipher_file #append key to the end of cipher file
+	echo "Encryption Done Successfully!"
+
+	rm results.txt
+	rm sorted.txt
+	rm temp.txt
+	rm temp_2.txt
+else
+	echo "$PN Doesn't Exist!!!"
+fi
